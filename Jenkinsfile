@@ -1,25 +1,33 @@
 pipeline {
     agent any
-    tools{
-        maven 'local_maven'
-    }
 
-    stages{
-        stage('Build'){
-            steps{
-                sh 'maven clone package'
+    stages {
+        stage('Checkout') {
+            steps {
+                git 'https://github.com/bhuvan121352/devOpsWeb'
             }
-            post{
-                success{
-                    echo "Archiving the Artifacts"
-                    archiveArtifacts artifacts: '**/target/*.war'
+        }
+
+        stage('Build') {
+            steps {
+                script {
+                    docker.image('maven').inside {
+                        sh 'mvn clean install'
+                    }
                 }
             }
         }
-        stage('Deploy to tomcat server'){
-            steps{
-                deploy adapters: [tomcat9(path: '', url: 'http://34.200.231.36:8888/')], contextPath: null, war: '**/*.war'
-            }
+
+        // Add more stages for testing, deployment, etc.
+
+    }
+
+    post {
+        success {
+            echo 'CI/CD Pipeline completed successfully!'
+        }
+        failure {
+            echo 'CI/CD Pipeline failed!'
         }
     }
 }
